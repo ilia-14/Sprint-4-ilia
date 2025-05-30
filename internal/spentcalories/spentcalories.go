@@ -28,7 +28,7 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 	// 1 элемент - преобразовываем в тип int
 	steps, err := strconv.Atoi(dataString[0])
 	if err != nil || steps <= 0 {
-		return 0, "", 0, nil
+		return 0, "", 0, err
 	}
 
 	// 2 элемент - вид активности
@@ -37,7 +37,7 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 	// 3 элемент - преобразовываем в тип time.Duration
 	durationOfTheTraning, err := time.ParseDuration(dataString[2])
 	if err != nil {
-		return 0, "", 0, nil
+		return 0, "", 0, err
 	}
 
 	return steps, tupeOfActivity, durationOfTheTraning, err
@@ -83,7 +83,6 @@ func RunningSpentCalories(steps int, weight, height float64, duration time.Durat
 	// Переводим продолжительность бега в минуты
 	durationOfTheRunningInMinuters := duration.Minutes()
 
-	//
 	runningCalories := (weight * meanSpeedRunning * durationOfTheRunningInMinuters) / minInH
 
 	return runningCalories, nil
@@ -108,7 +107,6 @@ func WalkingSpentCalories(steps int, weight, height float64, duration time.Durat
 }
 
 func TrainingInfo(data string, weight, height float64) (string, error) {
-	//
 	steps, tupeOfActivity, durationOfTheTraning, err := parseTraining(data)
 	if err != nil {
 		return "", err
@@ -132,10 +130,10 @@ func TrainingInfo(data string, weight, height float64) (string, error) {
 	}
 
 	bottomLine := fmt.Sprintf(` Тип тренировки: %s
-	                            Длительность: %.2f ч.
-								Дистанция: %.2f км.
-								Скорость: %.2f км/ч
-								Сожгли калорий: %.2f`, tupeOfActivity, durationOfTheTraning.Hours(), durationOfThe, meanSpeed, caloriesExpended)
+Длительность: %.2f ч.
+Дистанция: %.2f км.
+Скорость: %.2f км/ч
+Сожгли калорий: %.2f`, tupeOfActivity, durationOfTheTraning.Hours(), durationOfThe, meanSpeed, caloriesExpended)
 
 	return bottomLine, nil
 }
