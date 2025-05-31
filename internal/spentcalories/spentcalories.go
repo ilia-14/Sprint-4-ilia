@@ -1,6 +1,7 @@
 package spentcalories
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -22,25 +23,32 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 
 	// Проверяем длину слайса dateString
 	if len(dataString) != 3 {
-		return 0, "", 0, nil
+		return 0, "", 0, errors.New("неверный формат данных")
 	}
 
 	// 1 элемент - преобразовываем в тип int
 	steps, err := strconv.Atoi(dataString[0])
-	if err != nil || steps <= 0 {
-		return 0, "", 0, err
+	if err != nil {
+		return 0, "", 0, errors.New("неверный формат количества шагов")
+	} else if steps <= 0 {
+		return 0, "", 0, errors.New("количнство шагов должно быть больше 0")
 	}
 
 	// 2 элемент - вид активности
-	tupeOfActivity := dataString[1]
+	tupeOfActivity := strings.TrimSpace(dataString[1])
+	if tupeOfActivity != "Ходьба" && tupeOfActivity != "Бег" {
+		return 0, "", 0, errors.New("неверный тип тренировки")
+	}
 
 	// 3 элемент - преобразовываем в тип time.Duration
 	durationOfTheTraning, err := time.ParseDuration(dataString[2])
 	if err != nil {
-		return 0, "", 0, err
+		return 0, "", 0, errors.New("неверный формат продолжительности")
+	} else if durationOfTheTraning <= 0 {
+		return 0, "", 0, errors.New("продолжительность должно быть больше 0")
 	}
 
-	return steps, tupeOfActivity, durationOfTheTraning, err
+	return steps, tupeOfActivity, durationOfTheTraning, nil
 }
 
 func distance(steps int, height float64) float64 {
@@ -73,8 +81,16 @@ func meanSpeed(steps int, height float64, duration time.Duration) float64 {
 
 func RunningSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
 	// Проверка на корректность входящих данных
-	if steps <= 0 || duration <= 0 {
-		return 0, nil
+	if steps <= 0 {
+		return 0, errors.New("количнство шагов должно быть больше 0")
+	}
+
+	if weight <= 0 {
+		return 0, errors.New("вес должно быть больше 0")
+	}
+
+	if duration <= 0 {
+		return 0, errors.New("продолжительность должно быть больше 0")
 	}
 
 	// Расчет средней скорости при беге
@@ -90,8 +106,20 @@ func RunningSpentCalories(steps int, weight, height float64, duration time.Durat
 
 func WalkingSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
 	// Проверка на корректность входящих данных
-	if steps <= 0 || duration <= 0 {
-		return 0, nil
+	if steps <= 0 {
+		return 0, errors.New("количнство шагов должно быть больше 0")
+	}
+
+	if weight <= 0 {
+		return 0, errors.New("вес должно быть больше 0")
+	}
+
+	if height <= 0 {
+		return 0, errors.New("рост должно быть больше 0")
+	}
+
+	if duration <= 0 {
+		return 0, errors.New("продолжительность должно быть больше 0")
 	}
 
 	// Расчет средней скорости при ходьбе
@@ -108,8 +136,12 @@ func WalkingSpentCalories(steps int, weight, height float64, duration time.Durat
 
 func TrainingInfo(data string, weight, height float64) (string, error) {
 	steps, tupeOfActivity, durationOfTheTraning, err := parseTraining(data)
+	if tupeOfActivity != "Ходьба" && tupeOfActivity != "Бег" {
+		return "", errors.New("неизвестный тип тренировки")
+	}
+
 	if err != nil {
-		return "", err
+		return "", errors.New("неверный тип данных")
 	}
 
 	durationOfThe := distance(steps, height)
@@ -119,21 +151,24 @@ func TrainingInfo(data string, weight, height float64) (string, error) {
 	switch tupeOfActivity {
 	case "Ходьба":
 		caloriesExpended, err = WalkingSpentCalories(steps, weight, height, durationOfTheTraning)
+		if err != nil {
+			return "", errors.New("неверный тип данных")
+		}
 	case "Бег":
 		caloriesExpended, err = RunningSpentCalories(steps, weight, height, durationOfTheTraning)
+		if err != nil {
+			return "", errors.New("неверный тип данных")
+		}
 	default:
-		return "", fmt.Errorf("неизвестный тип тренировки")
+		return "", errors.New("неизвестный тип тренировки")
 	}
 
-	if err != nil {
-		return "", err
-	}
-
-	bottomLine := fmt.Sprintf(` Тип тренировки: %s
+	bottomLine := fmt.Sprintf(`Тип тренировки: %s
 Длительность: %.2f ч.
 Дистанция: %.2f км.
 Скорость: %.2f км/ч
-Сожгли калорий: %.2f`, tupeOfActivity, durationOfTheTraning.Hours(), durationOfThe, meanSpeed, caloriesExpended)
+Сожгли калорий: %.2f
+`, tupeOfActivity, durationOfTheTraning.Hours(), durationOfThe, meanSpeed, caloriesExpended)
 
 	return bottomLine, nil
 }
