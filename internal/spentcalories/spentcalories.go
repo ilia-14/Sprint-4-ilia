@@ -27,7 +27,7 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 	}
 
 	// 1 элемент - преобразовываем в тип int
-	steps, err := strconv.Atoi(dataString[0])
+	steps, err := strconv.Atoi(strings.TrimSpace(dataString[0]))
 	if err != nil {
 		return 0, "", 0, errors.New("неверный формат количества шагов")
 	} else if steps <= 0 {
@@ -41,7 +41,7 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 	}
 
 	// 3 элемент - преобразовываем в тип time.Duration
-	durationOfTheTraning, err := time.ParseDuration(dataString[2])
+	durationOfTheTraning, err := time.ParseDuration(strings.TrimSpace(dataString[2]))
 	if err != nil {
 		return 0, "", 0, errors.New("неверный формат продолжительности")
 	} else if durationOfTheTraning <= 0 {
@@ -66,7 +66,7 @@ func distance(steps int, height float64) float64 {
 
 func meanSpeed(steps int, height float64, duration time.Duration) float64 {
 	// Проверка на корректность входящих данных
-	if duration <= 0 {
+	if duration.Hours() <= 0 {
 		return 0
 	}
 
@@ -141,26 +141,26 @@ func TrainingInfo(data string, weight, height float64) (string, error) {
 	}
 
 	if err != nil {
-		return "", errors.New("неверный тип данных")
+		return "", err
 	}
 
 	durationOfThe := distance(steps, height)
+
 	meanSpeed := meanSpeed(steps, height, durationOfTheTraning)
+
 	var caloriesExpended float64
 
 	switch tupeOfActivity {
 	case "Ходьба":
 		caloriesExpended, err = WalkingSpentCalories(steps, weight, height, durationOfTheTraning)
-		if err != nil {
-			return "", errors.New("неверный тип данных")
-		}
 	case "Бег":
 		caloriesExpended, err = RunningSpentCalories(steps, weight, height, durationOfTheTraning)
-		if err != nil {
-			return "", errors.New("неверный тип данных")
-		}
 	default:
 		return "", errors.New("неизвестный тип тренировки")
+	}
+
+	if err != nil {
+		return "", err
 	}
 
 	bottomLine := fmt.Sprintf(`Тип тренировки: %s

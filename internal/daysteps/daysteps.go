@@ -53,16 +53,6 @@ func DayActionInfo(data string, weight, height float64) string {
 		return ""
 	}
 
-	if steps <= 0 {
-		log.Printf("Ошибка: количество шагов должно быть больше 0")
-		return ""
-	}
-
-	if durationOfTheWalk <= 0 {
-		log.Printf("Ошибка: продолжительность должно быть больше 0")
-		return ""
-	}
-
 	// Дистанция в метрах
 	distanceInM := float64(steps) * stepLength
 
